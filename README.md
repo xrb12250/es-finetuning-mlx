@@ -44,6 +44,48 @@ accelerate launch \
     --gpu_threads 1
 ```
 
+## Running on Apple silicon with MLX
+
+Install the MLX stack into a fresh virtual environment:
+
+```bash
+python -m venv es-mlx
+source es-mlx/bin/activate
+pip install -r requirements-mlx.txt
+```
+
+Run the conciseness ES script with an MLX-ready model (Qwen 2.5 3B works well locally). For Qwen, enable remote code and set the EOS token:
+
+```bash
+python es_mlx_conciseness.py \
+  --model mlx-community/Qwen2.5-3B-Instruct-bf16 \
+  --trust_qwen \
+  --iterations 50 \
+  --population 8 \
+  --sigma 1e-3 \
+  --alpha 5e-4 \
+  --verbose
+```
+
+For the countdown task (ensure `countdown/data/countdown.json` exists):
+
+```bash
+python countdown/es_mlx_fine-tuning_countdown.py \
+  --model mlx-community/Qwen2.5-3B-Instruct-bf16 \
+  --trust_qwen \
+  --iterations 50 \
+  --population 8 \
+  --sigma 1e-3 \
+  --alpha 5e-4 \
+  --verbose
+```
+
+Notes:
+
+* Use 4-bit variants (e.g., `...-4bit`) if memory is tight.
+* MLX evaluation is lazy; the scripts call `mx.eval(model.parameters())` after parameter updates to materialize changes.
+* Fine-tuned weights are saved via `model.save_weights(...)` in `.safetensors` format.
+
 ## Other Parameters
 
 - `--gpu_ids`: Specify which GPUs to use (CUDA device id), argument for `accelerate launch`
